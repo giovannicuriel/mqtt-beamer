@@ -1,3 +1,3 @@
 bin_PROGRAMS = mqtt-beamer
 
-mqtt-beamer_SOURCES = main.cpp
+mqtt_beamer_SOURCES = main.cpp
