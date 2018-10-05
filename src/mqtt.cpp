@@ -6,6 +6,8 @@
  * @date 24/09/2018
  * @copyright GPL-3.0
  */
+#include <arpa/inet.h>
+#include <string.h>
 #include "./mqtt.hpp"
 
 MQTTConnectAck::MQTTConnectAck()
@@ -125,5 +127,3 @@ void MQTTPublishMsg::unpack(byte *data, uint32_t &offset)
   message.assign("");
   message.copy((char *)rawMessage, rawSize);
 };
-}
-;

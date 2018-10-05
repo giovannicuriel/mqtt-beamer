@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <sys/time.h>
+#include <sstream>
 
 #include "./packing.hpp"
 #include "./mqtt.hpp"
@@ -42,11 +43,11 @@ int connect() {
     return sock;
 }
 
-void sendConnect(int sock) {
+void sendConnect(int sock, std::string tenant, std::string device) {
     uint16_t totalLength = 0;
     int valread = 0;
     MQTTConnectMsg msg;
-    msg.client_id = "admin:d5615d";
+    msg.client_id = tenant + ":" + device;
     byte data[256] = { 0 };
     uint32_t offset = 0;
     msg.pack(data, offset);
@@ -59,50 +60,65 @@ void sendConnect(int sock) {
     valread = read( sock , data, 256);
 }
 
-void sendPublish(int sock, MQTTPublishMsg & publishMsg) {
-
-}
-
-int main(void)
+int main(int argc, char * argv[])
 {
-    int sock = connect();
-    sendConnect(sock);
-
-
+    std::stringstream ss;
+    std::string tenant = argv[1];
+    std::string device = argv[2];
+    float rate = atof(argv[3]);
+    uint32_t messages = atoi(argv[4]);
     uint16_t totalLength = 0;
-    byte data[256] = { 0 };
     uint32_t offset = 0;
+    byte data[256] = { 0 };
     MQTTPublishMsg publishMsg;
-    publishMsg.topic = "/admin/d5615d/attrs";
-    publishMsg.message = "{\"m\" : \"simple\"}";
-    publishMsg.pack(data, offset);
-    totalLength = offset;
-    publishMsg.msg_length = offset - 2;
-    offset = 0;
-    publishMsg.packMessageLength(data, offset);
 
+    publishMsg.topic = std::string("/") + tenant + "/" + device + "/attrs";
 
-    struct timeval tv1, tv2;
+    std::cout << "tenant: " << tenant << ", device: " << device << std::endl;
+    std::cout << "freq: " << rate << ", messages: " << messages << std::endl;
+    std::cout << "topic: " << publishMsg.topic << std::endl;
+
+    int sock = connect();
+    sendConnect(sock, tenant, device);
+
+    struct timeval tv1, tv2, startTime, endTime;
     memset(&tv1, 0, sizeof(struct timeval));
     memset(&tv2, 0, sizeof(struct timeval));
-    long int elapsed = 0;
-    int freq = 1000;
-    long int period = 1.0 / freq * 1000000;
-    for (int i = 0; i < 500000; i++) {
-        gettimeofday(&tv1, NULL);
-        send(sock, data, totalLength, 0);
-        gettimeofday(&tv2, NULL);
-        // std::cout << "prev: " << tv1.tv_sec << ":" << tv1.tv_usec << ", next: " << tv2.tv_sec << ":" << tv2.tv_usec;
-        elapsed = tv2.tv_sec * 1000000 + tv2.tv_usec - (tv1.tv_sec * 1000000 + tv1.tv_usec);
-        // std::cout << ", elapsed: " << elapsed << ", period: " << period;
-        // std::cout << ", sleep of " << (period - elapsed) << " usec" << std::endl;
-        if (period - elapsed > 0)
-            usleep(period - elapsed);
-        if (i % 50000 == 0) {
+    memset(&startTime, 0, sizeof(struct timeval));
+    memset(&endTime, 0, sizeof(struct timeval));
+    uint32_t elapsed = 0;
+    uint32_t freq = rate;
+    uint32_t period = 1.0 / freq * 1000000;
+    gettimeofday(&startTime, NULL);
 
+    for (uint32_t i = 0; i < messages; i++) {
+        gettimeofday(&tv1, NULL);
+        // Creating packet
+        ss << "{\"perf\": " << tv1.tv_sec * 1000000 + tv1.tv_usec << ", \"counter\" : " << i << "}";
+        publishMsg.message = ss.str();
+        ss.str("");
+        offset = 0;
+        publishMsg.pack(data, offset);
+        // Updating packet size
+        totalLength = offset;
+        publishMsg.msg_length = offset - 2;
+        offset = 0;
+        publishMsg.packMessageLength(data, offset);
+
+        // Send it
+        send(sock, data, totalLength, 0);
+
+        // Getting time difference
+        gettimeofday(&tv2, NULL);
+        elapsed = tv2.tv_sec * 1000000 + tv2.tv_usec - (tv1.tv_sec * 1000000 + tv1.tv_usec);
+        if (period - elapsed > 0) {
+            usleep(period - elapsed);
         }
     }
+    gettimeofday(&endTime, NULL);
 
+    float totalTime = endTime.tv_sec - startTime.tv_sec + (endTime.tv_usec - startTime.tv_usec) / 1000000.0;
+    std::cout << "Sent " << messages << " in " << totalTime << ", rate " << messages / totalTime << std::endl;
 
     return 0;
 }
