@@ -94,7 +94,7 @@ int main(int argc, char * argv[])
     for (uint32_t i = 0; i < messages; i++) {
         gettimeofday(&tv1, NULL);
         // Creating packet
-        ss << "{\"perf\": " << tv1.tv_sec * 1000000 + tv1.tv_usec << ", \"counter\" : " << i << "}";
+        ss << "{\"perf\": " << tv1.tv_sec * 1000 + tv1.tv_usec / 1000 << "}";
         publishMsg.message = ss.str();
         ss.str("");
         offset = 0;
