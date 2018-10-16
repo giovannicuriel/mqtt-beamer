@@ -7,7 +7,7 @@
  * @copyright GPL-3.0
  */
 #include "packing.hpp"
-#include <string.h>;
+#include <string.h>
 #include <arpa/inet.h>
 
 void pack(byte *data, uint32_t &offset, uint8_t value)
