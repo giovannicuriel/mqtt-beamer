@@ -91,10 +91,14 @@ int main(int argc, char * argv[])
     uint32_t period = 1.0 / freq * 1000000;
     gettimeofday(&startTime, NULL);
 
+    std::string lastMessage = "false";
     for (uint32_t i = 0; i < messages; i++) {
         gettimeofday(&tv1, NULL);
         // Creating packet
-        ss << "{\"perf\": " << tv1.tv_sec * 1000 + tv1.tv_usec / 1000 << "}";
+        if(i == (messages - 1)){
+            lastMessage = "true";
+        }
+        ss << "{\"perf\": " << tv1.tv_sec * 1000 + tv1.tv_usec / 1000 << ", \"total_messages\": "<< messages << ", \"last_message\": " << lastMessage << "}";
         publishMsg.message = ss.str();
         ss.str("");
         offset = 0;
