@@ -15,7 +15,7 @@
 #include "./packing.hpp"
 #include "./mqtt.hpp"
 
-int connect() {
+int connect(std::string address) {
     int ret = 0;
 
     // Creating socket
@@ -26,7 +26,7 @@ int connect() {
     memset(&server, 0, sizeof(sockaddr_in));
     server.sin_family = AF_INET;
     server.sin_port = htons(1883);
-    ret = inet_pton(AF_INET, "dojot_iotagent-mqtt_1", &server.sin_addr);
+    ret = inet_pton(AF_INET, address, &server.sin_addr);
     if (ret < 0) {
         std::cout << "Error";
         perror("");
@@ -63,10 +63,11 @@ void sendConnect(int sock, std::string tenant, std::string device) {
 int main(int argc, char * argv[])
 {
     std::stringstream ss;
-    std::string tenant = argv[1];
-    std::string device = argv[2];
-    float rate = atof(argv[3]);
-    uint32_t messages = atoi(argv[4]);
+    std::string address = argv[1];
+    std::string tenant = argv[2];
+    std::string device = argv[3];
+    float rate = atof(argv[4]);
+    uint32_t messages = atoi(argv[5]);
     uint16_t totalLength = 0;
     uint32_t offset = 0;
     byte data[256] = { 0 };
@@ -78,7 +79,7 @@ int main(int argc, char * argv[])
     std::cout << "freq: " << rate << ", messages: " << messages << std::endl;
     std::cout << "topic: " << publishMsg.topic << std::endl;
 
-    int sock = connect();
+    int sock = connect(address);
     sendConnect(sock, tenant, device);
 
     struct timeval tv1, tv2, startTime, endTime;
