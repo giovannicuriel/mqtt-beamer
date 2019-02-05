@@ -26,7 +26,7 @@ int connect() {
     memset(&server, 0, sizeof(sockaddr_in));
     server.sin_family = AF_INET;
     server.sin_port = htons(1883);
-    ret = inet_pton(AF_INET, "127.0.0.1", &server.sin_addr);
+    ret = inet_pton(AF_INET, "dojot_iotagent-mqtt_1", &server.sin_addr);
     if (ret < 0) {
         std::cout << "Error";
         perror("");
