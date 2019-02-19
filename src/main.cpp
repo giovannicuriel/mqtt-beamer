@@ -99,7 +99,7 @@ int main(int argc, char * argv[])
         if(i == (messages - 1)){
             lastMessage = "true";
         }
-        ss << "{\"perf\": " << tv1.tv_sec * 1000 + tv1.tv_usec / 1000 << ", \"total_messages\": "<< messages << ", \"last_message\": " << lastMessage << "}";
+        ss << "{\"perf\": " << tv1.tv_sec * 1000 + tv1.tv_usec / 1000 << ", \"send_order\": "<< (i+1) << ", \"total_messages\": "<< messages << ", \"last_message\": " << lastMessage << "}";
         publishMsg.message = ss.str();
         ss.str("");
         offset = 0;
